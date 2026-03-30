@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\TestimonialController;
+use App\Http\Controllers\Api\BlogController;
 
 Route::get('/test', function () {
     return response()->json(['message' => 'API WORKING']);
@@ -37,4 +38,11 @@ Route::prefix('testimonials')->group(function () {
     Route::get('/{id}', [TestimonialController::class, 'show']);
     Route::post('/{id}', [TestimonialController::class, 'update']); // use POST for form-data
     Route::delete('/{id}', [TestimonialController::class, 'destroy']);
+});
+Route::prefix('blogs')->group(function () {
+    Route::get('/', [BlogController::class, 'index']);
+    Route::post('/', [BlogController::class, 'store']);
+    Route::get('/{id}', [BlogController::class, 'show']);
+    Route::post('/{id}', [BlogController::class, 'update']); // form-data support
+    Route::delete('/{id}', [BlogController::class, 'destroy']);
 });
