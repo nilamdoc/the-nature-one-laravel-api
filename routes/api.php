@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\PressLogoController;
 use App\Http\Controllers\Api\WhyUsController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\UserProfileController;
+use App\Http\Controllers\Api\ProductCategoryController;
+use App\Http\Controllers\Api\ProductController;
 
 Route::get('/test', function () {
     return response()->json(['message' => 'API WORKING']);
@@ -119,4 +121,18 @@ Route::prefix('users')->group(function () {
     Route::get('/{id}', [UserProfileController::class, 'show']);
     Route::post('/{id}', [UserProfileController::class, 'update']); // POST for update
     Route::delete('/{id}', [UserProfileController::class, 'destroy']);
+});
+Route::prefix('product-categories')->group(function () {
+    Route::get('/', [ProductCategoryController::class, 'index']);
+    Route::post('/', [ProductCategoryController::class, 'store']);
+    Route::get('/{id}', [ProductCategoryController::class, 'show']);
+    Route::post('/{id}', [ProductCategoryController::class, 'update']); // POST for update
+    Route::delete('/{id}', [ProductCategoryController::class, 'destroy']);
+});
+Route::prefix('products')->group(function () {
+    Route::get('/', [ProductController::class, 'index']);
+    Route::post('/', [ProductController::class, 'store']);
+    Route::get('/{id}', [ProductController::class, 'show']);
+    Route::post('/{id}', [ProductController::class, 'update']); // POST for update
+    Route::delete('/{id}', [ProductController::class, 'destroy']);
 });
