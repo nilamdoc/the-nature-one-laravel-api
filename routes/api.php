@@ -19,8 +19,12 @@ use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\LeadController;
+use App\Http\Controllers\Api\ShippingZoneController;
+use App\Http\Controllers\Api\TaxController;
+use App\Http\Controllers\Api\DashboardController;
 
-
+Route::get('/dashboard', [DashboardController::class, 'index']);
 Route::get('/test', function () {
     return response()->json(['message' => 'API WORKING']);
 });
@@ -142,4 +146,19 @@ Route::prefix('orders')->group(function () {
     Route::get('/', [OrderController::class, 'index']);           // List all orders
     Route::get('/{id}', [OrderController::class, 'show']);       // View order details
     Route::post('/{id}/status', [OrderController::class, 'updateStatus']); // Update order status
+});
+Route::prefix('leads')->group(function () {
+    Route::get('/', [LeadController::class, 'index']);
+    Route::get('/{id}', [LeadController::class, 'show']);
+    Route::post('/{id}/status', [LeadController::class, 'updateStatus']);
+});
+Route::prefix('shipping-zones')->group(function () {
+    Route::get('/', [ShippingZoneController::class, 'index']);
+    Route::post('/', [ShippingZoneController::class, 'store']);
+    Route::post('/{id}', [ShippingZoneController::class, 'update']);
+    Route::delete('/{id}', [ShippingZoneController::class, 'destroy']);
+});
+Route::prefix('taxes')->group(function () {
+    Route::get('/', [TaxController::class, 'index']);
+    Route::post('/', [TaxController::class, 'save']);
 });
