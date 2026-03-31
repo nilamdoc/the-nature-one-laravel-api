@@ -18,6 +18,8 @@ use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\OrderController;
+
 
 Route::get('/test', function () {
     return response()->json(['message' => 'API WORKING']);
@@ -135,4 +137,9 @@ Route::prefix('products')->group(function () {
     Route::get('/{id}', [ProductController::class, 'show']);
     Route::post('/{id}', [ProductController::class, 'update']); // POST for update
     Route::delete('/{id}', [ProductController::class, 'destroy']);
+});
+Route::prefix('orders')->group(function () {
+    Route::get('/', [OrderController::class, 'index']);           // List all orders
+    Route::get('/{id}', [OrderController::class, 'show']);       // View order details
+    Route::post('/{id}/status', [OrderController::class, 'updateStatus']); // Update order status
 });
