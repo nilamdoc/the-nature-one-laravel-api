@@ -12,8 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+
+        // ❌ REMOVED Fruitcake CORS (not needed in Laravel 11+)
+
         $middleware->alias([
             'api.auth' => \App\Http\Middleware\ApiAuthMiddleware::class,
+            'check.origin' => \App\Http\Middleware\CheckOrigin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -23,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return \App\Http\Resources\ApiResponse::unauthorized('Unauthorized');
         });
 
-        // 🔹 Handle Validation Errors (optional but recommended)
+        // 🔹 Handle Validation Errors
         $exceptions->render(function (\Illuminate\Validation\ValidationException $e, $request) {
             return \App\Http\Resources\ApiResponse::validation($e->validator);
         });
