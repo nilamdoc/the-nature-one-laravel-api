@@ -23,7 +23,15 @@ use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\ShippingZoneController;
 use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\AuthController;
 
+Route::post('/register', [AuthController::class,'register']);
+Route::post('/login', [AuthController::class,'login']);
+
+Route::group(['middleware' => 'api.auth'], function () {
+    Route::post('/logout', [AuthController::class,'logout']);
+    Route::get('/profile', [AuthController::class,'profile']);
+});
 Route::get('/dashboard', [DashboardController::class, 'index']);
 Route::get('/test', function () {
     return response()->json(['message' => 'API WORKING']);
