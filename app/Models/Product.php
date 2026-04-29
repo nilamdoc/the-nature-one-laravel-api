@@ -26,4 +26,9 @@ class Product extends Model
         'is_active',
         'is_featured',
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(ProductCategory::class, 'category_id');
+    }
 }

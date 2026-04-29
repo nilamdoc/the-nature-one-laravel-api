@@ -84,7 +84,9 @@ Route::prefix('cart')->group(function () {
     Route::post('/update', [CartController::class, 'update']);
     Route::post('/remove', [CartController::class, 'remove']);
 });
-
+Route::prefix('hero-slides')->group(function () {
+    Route::get('/', [HeroSlideController::class, 'index']);
+});
 Route::group(['middleware' => 'check.origin'], function () {
 
     Route::post('/register', [AuthController::class,'register']);
@@ -152,7 +154,6 @@ Route::group(['middleware' => 'check.origin'], function () {
             Route::get('/slug/{slug}', [PageController::class, 'getBySlug']);
         });
         Route::prefix('hero-slides')->group(function () {
-            Route::get('/', [HeroSlideController::class, 'index']);
             Route::post('/', [HeroSlideController::class, 'store']);
             Route::get('/{id}', [HeroSlideController::class, 'show']);
             Route::post('/{id}', [HeroSlideController::class, 'update']); // form-data
