@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Lead;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use App\Http\Resources\ApiResponse;
 
 class LeadController extends Controller
@@ -108,6 +109,8 @@ class LeadController extends Controller
                 'status' => $lead->status,
             ], 'Lead status updated successfully');
 
+        } catch (ValidationException $e) {
+            return ApiResponse::validation($e->validator);
         } catch (\Exception $e) {
             return ApiResponse::error('Update failed', [
                 'error' => $e->getMessage()
@@ -115,3 +118,5 @@ class LeadController extends Controller
         }
     }
 }
+
+

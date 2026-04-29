@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ShippingZone;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use App\Http\Resources\ApiResponse;
 
 class ShippingZoneController extends Controller
@@ -30,7 +31,7 @@ class ShippingZoneController extends Controller
 
             return ApiResponse::success($data);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return ApiResponse::error('Failed', ['error' => $e->getMessage()]);
         }
     }
@@ -53,7 +54,9 @@ class ShippingZoneController extends Controller
 
             return ApiResponse::success($zone, 'Created successfully');
 
-        } catch (\Exception $e) {
+        } catch (ValidationException $e) {
+            return ApiResponse::validation($e->validator);
+        } catch (\Throwable $e) {
             return ApiResponse::error('Create failed', ['error' => $e->getMessage()]);
         }
     }
@@ -82,7 +85,9 @@ class ShippingZoneController extends Controller
 
             return ApiResponse::success($zone, 'Updated successfully');
 
-        } catch (\Exception $e) {
+        } catch (ValidationException $e) {
+            return ApiResponse::validation($e->validator);
+        } catch (\Throwable $e) {
             return ApiResponse::error('Update failed', ['error' => $e->getMessage()]);
         }
     }
@@ -104,8 +109,10 @@ class ShippingZoneController extends Controller
 
             return ApiResponse::success([], 'Deleted');
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return ApiResponse::error('Delete failed', ['error' => $e->getMessage()]);
         }
     }
 }
+
+

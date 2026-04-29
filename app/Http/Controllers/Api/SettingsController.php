@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\UpdateSettingsRequest;
 use App\Http\Resources\ApiResponse;
 use App\Services\SettingsService;
-use Exception;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class SettingsController extends Controller
 {
@@ -27,7 +28,9 @@ class SettingsController extends Controller
 
             return ApiResponse::success($data, 'Settings fetched successfully');
 
-        } catch (Exception $e) {
+        } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Failed to fetch settings', [
                 'error' => $e->getMessage()
             ], 500);
@@ -44,10 +47,13 @@ class SettingsController extends Controller
 
             return ApiResponse::success($data, 'Settings updated successfully');
 
-        } catch (Exception $e) {
+        } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Something went wrong', [
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 }
+

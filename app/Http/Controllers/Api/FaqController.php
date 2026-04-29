@@ -3,56 +3,45 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ApiResponse;
 use App\Models\Faq;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class FaqController extends Controller
 {
-    /**
-     * 🔹 LIST FAQ
-     */
     public function index(Request $request)
     {
         try {
             $query = Faq::query();
 
-            // Optional filter
             if ($request->filled('category')) {
                 $query->where('category', $request->category);
             }
 
             $faqs = $query->latest()->paginate(10);
 
-            // Transform for UI
             $faqs->getCollection()->transform(function ($item) {
                 return [
                     'id' => $item->_id,
                     'question' => $item->question,
                     'answer' => $item->answer,
                     'category' => $item->category,
-                    'status' => ucfirst($item->status),
-                    'created_at' => $item->created_at->format('Y-m-d'),
+                    'status' => strtolower((string) $item->status),
+                    'order' => (int) ($item->order ?? 0),
+                    'created_at' => optional($item->created_at)->format('Y-m-d'),
                 ];
             });
 
-            return response()->json([
-                'status' => true,
-                'message' => 'FAQ list fetched successfully',
-                'data' => $faqs
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to fetch FAQs',
-                'error' => $e->getMessage()
-            ], 500);
+            return ApiResponse::success($faqs, 'FAQ list fetched successfully');
+        } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
+            return ApiResponse::error('Failed to fetch FAQs', ['error' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * 🔹 STORE FAQ
-     */
     public function store(Request $request)
     {
         try {
@@ -61,67 +50,52 @@ class FaqController extends Controller
                 'answer' => 'required|string',
                 'category' => 'required|string|max:100',
                 'status' => 'required|in:active,inactive',
+                'order' => 'nullable|integer|min:0',
             ]);
 
+            $data['status'] = strtolower((string) $data['status']);
             $faq = Faq::create($data);
 
-            return response()->json([
-                'status' => true,
-                'message' => 'FAQ created successfully',
-                'data' => $faq
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Create failed',
-                'error' => $e->getMessage()
-            ], 500);
+            return ApiResponse::success($faq, 'FAQ created successfully');
+        } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
+            return ApiResponse::error('Create failed', ['error' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * 🔹 SHOW SINGLE FAQ
-     */
     public function show($id)
     {
         try {
             $faq = Faq::find($id);
 
             if (!$faq) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'FAQ not found'
-                ], 404);
+                return ApiResponse::error('FAQ not found', [], 404);
             }
 
-            return response()->json([
-                'status' => true,
-                'data' => $faq
+            return ApiResponse::success([
+                'id' => $faq->_id,
+                'question' => $faq->question,
+                'answer' => $faq->answer,
+                'category' => $faq->category,
+                'status' => strtolower((string) $faq->status),
+                'order' => (int) ($faq->order ?? 0),
+                'created_at' => optional($faq->created_at)->format('Y-m-d'),
             ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Error fetching FAQ',
-                'error' => $e->getMessage()
-            ], 500);
+        } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
+            return ApiResponse::error('Error fetching FAQ', ['error' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * 🔹 UPDATE FAQ
-     */
     public function update(Request $request, $id)
     {
         try {
             $faq = Faq::find($id);
 
             if (!$faq) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'FAQ not found'
-                ], 404);
+                return ApiResponse::error('FAQ not found', [], 404);
             }
 
             $data = $request->validate([
@@ -129,53 +103,36 @@ class FaqController extends Controller
                 'answer' => 'required|string',
                 'category' => 'required|string|max:100',
                 'status' => 'required|in:active,inactive',
+                'order' => 'nullable|integer|min:0',
             ]);
 
+            $data['status'] = strtolower((string) $data['status']);
             $faq->update($data);
 
-            return response()->json([
-                'status' => true,
-                'message' => 'FAQ updated successfully',
-                'data' => $faq
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Update failed',
-                'error' => $e->getMessage()
-            ], 500);
+            return ApiResponse::success($faq, 'FAQ updated successfully');
+        } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
+            return ApiResponse::error('Update failed', ['error' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * 🔹 DELETE FAQ
-     */
     public function destroy($id)
     {
         try {
             $faq = Faq::find($id);
 
             if (!$faq) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'FAQ not found'
-                ], 404);
+                return ApiResponse::error('FAQ not found', [], 404);
             }
 
             $faq->delete();
 
-            return response()->json([
-                'status' => true,
-                'message' => 'FAQ deleted successfully'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Delete failed',
-                'error' => $e->getMessage()
-            ], 500);
+            return ApiResponse::success([], 'FAQ deleted successfully');
+        } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
+            return ApiResponse::error('Delete failed', ['error' => $e->getMessage()], 500);
         }
     }
 }

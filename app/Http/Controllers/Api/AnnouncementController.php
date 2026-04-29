@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Announcement;
 use Illuminate\Http\Request;
 use App\Http\Resources\ApiResponse;
+use Illuminate\Validation\ValidationException;
+use App\Models\Announcement;
+use Throwable;
+
 
 class AnnouncementController extends Controller
 {
@@ -29,7 +32,9 @@ class AnnouncementController extends Controller
 
             return ApiResponse::success($data, 'Announcements fetched');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Failed', [
                 'error' => $e->getMessage()
             ]);
@@ -53,7 +58,9 @@ class AnnouncementController extends Controller
 
             return ApiResponse::success($announcement, 'Created successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Create failed', [
                 'error' => $e->getMessage()
             ]);
@@ -75,7 +82,9 @@ class AnnouncementController extends Controller
 
             return ApiResponse::success($announcement);
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Error', [
                 'error' => $e->getMessage()
             ]);
@@ -105,7 +114,9 @@ class AnnouncementController extends Controller
 
             return ApiResponse::success($announcement, 'Updated successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Update failed', [
                 'error' => $e->getMessage()
             ]);
@@ -129,10 +140,17 @@ class AnnouncementController extends Controller
 
             return ApiResponse::success([], 'Deleted successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Delete failed', [
                 'error' => $e->getMessage()
             ]);
         }
     }
 }
+
+
+
+
+

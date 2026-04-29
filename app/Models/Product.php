@@ -11,6 +11,7 @@ class Product extends Model
 
     protected $fillable = [
         'name',
+        'slug',
         'sku',
         'category', // reference to product category ID
         'badge',
@@ -21,6 +22,7 @@ class Product extends Model
         'short_description',
         'long_description',
         'highlights', // comma-separated string
+        'image',
         'is_active',
         'is_featured',
     ];

@@ -24,22 +24,93 @@ use App\Http\Controllers\Api\ShippingZoneController;
 use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CategoryMenuController;
+use App\Http\Controllers\Api\SliderController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\WebhookController;
+use App\Http\Controllers\Api\CartController;
+
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/auth/send-verification', [AuthController::class, 'sendVerification']);
+Route::post('/auth/verify-email', [AuthController::class, 'verifyEmail']);
+Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+Route::get('/settings', [SettingsController::class, 'index']);
+Route::post('/settings/update', [SettingsController::class, 'update']);
+
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{id}', [ProductController::class, 'show']);
+Route::post('/products', [ProductController::class, 'store']);
+Route::post('/products/{id}', [ProductController::class, 'update']);
+Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+// Primary category endpoint
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/menu', [CategoryMenuController::class, 'index']);
+// Backward compatible fallback endpoint
+Route::get('/product-categories', [ProductCategoryController::class, 'index']);
+Route::post('/product-categories', [ProductCategoryController::class, 'store']);
+Route::post('/product-categories/{id}', [ProductCategoryController::class, 'update']);
+Route::delete('/product-categories/{id}', [ProductCategoryController::class, 'destroy']);
+
+Route::get('/sliders', [SliderController::class, 'index']);
+Route::post('/sliders', [SliderController::class, 'store']);
+Route::post('/sliders/{id}', [SliderController::class, 'update']);
+Route::delete('/sliders/{id}', [SliderController::class, 'destroy']);
+Route::get('/hero-slides', [HeroSlideController::class, 'index']);
+Route::post('/hero-slides', [HeroSlideController::class, 'store']);
+Route::post('/hero-slides/{id}', [HeroSlideController::class, 'update']);
+Route::delete('/hero-slides/{id}', [HeroSlideController::class, 'destroy']);
+
+Route::get('/blogs', [BlogController::class, 'index']);
+Route::get('/blogs/{identifier}', [BlogController::class, 'show']);
+Route::post('/blogs', [BlogController::class, 'store']);
+Route::post('/blogs/{id}', [BlogController::class, 'update']);
+Route::delete('/blogs/{id}', [BlogController::class, 'destroy']);
+
+Route::get('/orders', [OrderController::class, 'index']);
+Route::post('/orders', [OrderController::class, 'store']);
+Route::get('/orders/{id}', [OrderController::class, 'show']);
+
+Route::post('/payment/create-order', [PaymentController::class, 'createOrder']);
+Route::post('/payment/verify', [PaymentController::class, 'verify']);
+Route::post('/payment/webhook', [WebhookController::class, 'razorpay']);
+
+Route::prefix('cart')->group(function () {
+    Route::get('/', [CartController::class, 'index']);
+    Route::post('/add', [CartController::class, 'add']);
+    Route::post('/update', [CartController::class, 'update']);
+    Route::post('/remove', [CartController::class, 'remove']);
+});
 
 Route::group(['middleware' => 'check.origin'], function () {
 
     Route::post('/register', [AuthController::class,'register']);
     Route::post('/login', [AuthController::class,'login']);
-
+    Route::prefix('categories')->group(function () {
+        Route::get('/menu', [ProductCategoryController::class, 'menu']);
+    });
+    Route::prefix('settings')->group(function () {
+        Route::get('/', [SettingsController::class, 'index']);
+        Route::post('/update', [SettingsController::class, 'update']);
+    });
+    Route::prefix('announcements')->group(function () {
+        Route::get('/', [AnnouncementController::class, 'index']);
+        Route::post('/', [AnnouncementController::class, 'store']);
+        Route::get('/{id}', [AnnouncementController::class, 'show']);
+        Route::post('/{id}', [AnnouncementController::class, 'update']);
+        Route::delete('/{id}', [AnnouncementController::class, 'destroy']);
+    });
     Route::group(['middleware' => 'api.auth','throttle:60,1'], function () {
 
+        
         Route::get('/dashboard', [DashboardController::class, 'index']);
         Route::get('/test', function () {
             return response()->json(['message' => 'API WORKING']);
         });
-        Route::prefix('settings')->group(function () {
-            Route::get('/', [SettingsController::class, 'index']);
-            Route::post('/update', [SettingsController::class, 'update']);
-        });
+        
         Route::prefix('audit-logs')->group(function () {
             Route::get('/', [AuditLogController::class, 'index']);
         });
@@ -87,13 +158,7 @@ Route::group(['middleware' => 'check.origin'], function () {
             Route::post('/{id}', [HeroSlideController::class, 'update']); // form-data
             Route::delete('/{id}', [HeroSlideController::class, 'destroy']);
         });
-        Route::prefix('announcements')->group(function () {
-            Route::get('/', [AnnouncementController::class, 'index']);
-            Route::post('/', [AnnouncementController::class, 'store']);
-            Route::get('/{id}', [AnnouncementController::class, 'show']);
-            Route::post('/{id}', [AnnouncementController::class, 'update']);
-            Route::delete('/{id}', [AnnouncementController::class, 'destroy']);
-        });
+       
         Route::prefix('trust-badges')->group(function () {
             Route::get('/', [TrustBadgeController::class, 'index']);
             Route::post('/', [TrustBadgeController::class, 'store']);
@@ -173,6 +238,7 @@ Route::group(['middleware' => 'check.origin'], function () {
 
         Route::post('/logout', [AuthController::class,'logout']);
         Route::get('/profile', [AuthController::class,'profile']);
+        Route::get('/verify-token', [AuthController::class,'verifyToken']);
     });
 });
 

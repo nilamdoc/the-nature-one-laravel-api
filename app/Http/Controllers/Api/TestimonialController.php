@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Testimonial;
 use Illuminate\Http\Request;
 use App\Http\Resources\ApiResponse;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class TestimonialController extends Controller
 {
@@ -29,7 +30,9 @@ class TestimonialController extends Controller
                 ];
             });
             return ApiResponse::success($testimonials, 'Testimonials fetched');
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Failed', [
                 'error' => $e->getMessage()
             ]);
@@ -62,7 +65,9 @@ class TestimonialController extends Controller
             }
             $testimonial = Testimonial::create($data);
             return ApiResponse::success($testimonial, 'Created successfully');
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Create failed', [
                 'error' => $e->getMessage()
             ]);
@@ -80,7 +85,9 @@ class TestimonialController extends Controller
                 return ApiResponse::error('Not found', [], 404);
             }
             return ApiResponse::success($testimonial);
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Error', [
                 'error' => $e->getMessage()
             ]);
@@ -124,7 +131,9 @@ class TestimonialController extends Controller
             }
             $testimonial->update($data);
             return ApiResponse::success($testimonial, 'Updated successfully');
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Update failed', [
                 'error' => $e->getMessage()
             ]);
@@ -143,10 +152,17 @@ class TestimonialController extends Controller
             }
             $testimonial->delete();
             return ApiResponse::success([], 'Deleted successfully');
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Delete failed', [
                 'error' => $e->getMessage()
             ]);
         }
     }
 }
+
+
+
+
+

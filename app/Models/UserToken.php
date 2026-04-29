@@ -11,7 +11,13 @@ class UserToken extends Model
 
     protected $fillable = [
         'user_id',
-        'token'
+        'token',
+        'purpose',
+        'expires_at',
+    ];
+
+    protected $casts = [
+        'expires_at' => 'datetime',
     ];
 
     public function user()

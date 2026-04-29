@@ -5,10 +5,55 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use App\Http\Resources\ApiResponse;
+use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
+    public function store(Request $request)
+    {
+        try {
+            $payload = $request->validate([
+                'order_reference' => 'nullable|string|max:100',
+                'shipping' => 'required|array',
+                'shipping.firstName' => 'required|string|max:100',
+                'shipping.lastName' => 'required|string|max:100',
+                'shipping.email' => 'required|email',
+                'items' => 'required|array|min:1',
+                'items.*.product_id' => 'required|string',
+                'items.*.quantity' => 'required|integer|min:1',
+                'items.*.price' => 'required|numeric|min:0',
+                'total' => 'required|numeric|min:1',
+            ]);
+
+            $orderReference = $payload['order_reference'] ?? (string) Str::uuid();
+            $existingOrder = Order::where('order_reference', $orderReference)->first();
+            if ($existingOrder) {
+                return ApiResponse::success($existingOrder, 'Order already exists');
+            }
+
+            $order = Order::create([
+                'order_id' => 'ORD-' . now()->format('YmdHis') . '-' . strtoupper(substr(md5((string) microtime(true)), 0, 5)),
+                'order_reference' => $orderReference,
+                'email' => $payload['shipping']['email'],
+                'customer_name' => trim($payload['shipping']['firstName'] . ' ' . $payload['shipping']['lastName']),
+                'purchase_date' => now(),
+                'shipping' => $payload['shipping'],
+                'items' => $payload['items'],
+                'total' => (float) $payload['total'],
+                'payment' => 'pending',
+                'status' => Order::STATUS_PENDING,
+            ]);
+
+            return ApiResponse::success($order, 'Order created');
+        } catch (ValidationException $e) {
+            return ApiResponse::validation($e->validator);
+        } catch (\Exception $e) {
+            return ApiResponse::error('Order create failed', ['error' => $e->getMessage()]);
+        }
+    }
+
     /**
      * 🔹 LIST ORDERS (Paginated)
      */
@@ -61,8 +106,7 @@ class OrderController extends Controller
                 'order_id' => $order->order_id,
                 'customer_name' => $order->customer_name,
                 'purchase_date' => $order->purchase_date->format('Y-m-d H:i:s'),
-                // items is already an array thanks to $casts
-                'items' => '-',
+                'items' => $order->items ?? [],
                 'total' => $order->total,
                 'payment' => $order->payment,
                 'status' => $order->status,
@@ -88,8 +132,12 @@ class OrderController extends Controller
             }
 
             $data = $request->validate([
-                'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
+                'status' => 'required|in:pending,paid,failed,cancelled',
             ]);
+
+            if (!$order->canTransitionTo((string) $data['status'])) {
+                return ApiResponse::error('Invalid status transition', ['status' => ['Transition is not allowed']], 409);
+            }
 
             $order->update($data);
 
@@ -102,8 +150,12 @@ class OrderController extends Controller
 
             return ApiResponse::success($responseData, 'Order status updated successfully');
 
+        } catch (ValidationException $e) {
+            return ApiResponse::validation($e->validator);
         } catch (\Exception $e) {
             return ApiResponse::error('Update failed', ['error' => $e->getMessage()]);
         }
     }
 }
+
+

@@ -10,118 +10,125 @@ class DashboardController extends Controller
     public function index()
     {
         try {
-
-            /**
-             * ============================
-             * 🔹 SAFE COUNTS (MongoDB)
-             * ============================
-             */
             $totalUsers = $this->safeCount(\App\Models\User::class);
             $totalOrders = $this->safeCount(\App\Models\Order::class);
             $totalProducts = $this->safeCount(\App\Models\Product::class);
+            $totalLeads = $this->safeCount(\App\Models\Lead::class);
             $totalSubscribers = $this->safeCount(\App\Models\Newsletter::class);
+            $totalCategories = $this->safeCount(\App\Models\ProductCategory::class);
+            $totalRevenue = $this->safeSum(\App\Models\Order::class, 'total');
 
-            /**
-             * ============================
-             * 🔹 RECENT LEADS
-             * ============================
-             */
-            $recentLeads = [];
+            $recentLeads = $this->loadRecentLeads();
+            $recentOrders = $this->loadRecentOrders();
 
-            if (class_exists(\App\Models\Newsletter::class)) {
-                try {
-                    $recentLeads = \App\Models\Newsletter::orderBy('_id', 'desc')
-                        ->limit(5)
-                        ->get()
-                        ->map(function ($item) {
-                            return [
-                                'id' => $item->_id ?? null,
-                                'name' => $item->name ?? 'Guest',
-                                'email' => $item->email ?? null,
-                                'status' => ucfirst($item->status ?? 'active'),
-                                'date' => isset($item->created_at)
-                                    ? optional($item->created_at)->format('Y-m-d H:i')
-                                    : null,
-                            ];
-                        });
-                } catch (\Exception $e) {
-                    $recentLeads = [];
-                }
-            }
-
-            /**
-             * ============================
-             * 🔹 RECENT ORDERS
-             * ============================
-             */
-            $recentOrders = [];
-
-            if (class_exists(\App\Models\Order::class)) {
-                try {
-                    $recentOrders = \App\Models\Order::orderBy('_id', 'desc')
-                        ->limit(5)
-                        ->get()
-                        ->map(function ($item) {
-                            return [
-                                'id' => $item->_id ?? null,
-                                'order_no' => $item->order_no ?? null,
-                                'amount' => $item->total ?? 0,
-                                'status' => ucfirst($item->status ?? 'pending'),
-                                'date' => isset($item->created_at)
-                                    ? optional($item->created_at)->format('Y-m-d H:i')
-                                    : null,
-                            ];
-                        });
-                } catch (\Exception $e) {
-                    $recentOrders = [];
-                }
-            }
-
-            /**
-             * ============================
-             * 🔹 FINAL RESPONSE
-             * ============================
-             */
             return ApiResponse::success([
                 'stats' => [
                     'total_users' => $totalUsers,
                     'total_orders' => $totalOrders,
                     'total_products' => $totalProducts,
+                    'total_leads' => $totalLeads,
                     'total_subscribers' => $totalSubscribers,
+                    'total_categories' => $totalCategories,
+                    'total_revenue' => $totalRevenue,
                 ],
                 'recent_leads' => $recentLeads,
                 'recent_orders' => $recentOrders,
             ], 'Dashboard data fetched successfully');
-
         } catch (\Exception $e) {
-
             return ApiResponse::error('Dashboard failed', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
-    /**
-     * ============================
-     * 🔥 MONGODB SAFE COUNT
-     * ============================
-     */
-    private function safeCount($modelClass)
+    private function safeCount($modelClass): int
     {
         try {
-
             if (!class_exists($modelClass)) {
                 return 0;
             }
 
             $model = new $modelClass;
 
-            return $model->raw(function ($collection) {
-                return $collection->countDocuments();
-            });
+            if (method_exists($model, 'raw')) {
+                return (int) $model->raw(function ($collection) {
+                    return $collection->countDocuments();
+                });
+            }
 
+            return (int) $modelClass::query()->count();
         } catch (\Exception $e) {
             return 0;
+        }
+    }
+
+    private function safeSum($modelClass, string $field): float
+    {
+        try {
+            if (!class_exists($modelClass)) {
+                return 0;
+            }
+
+            return (float) $modelClass::query()->sum($field);
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    private function loadRecentLeads(): array
+    {
+        if (!class_exists(\App\Models\Lead::class)) {
+            return [];
+        }
+
+        try {
+            return \App\Models\Lead::orderBy('_id', 'desc')
+                ->limit(5)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->_id ?? $item->id ?? null,
+                        'name' => $item->name ?? 'Guest',
+                        'email' => $item->email ?? null,
+                        'status' => strtolower((string) ($item->status ?? 'new')),
+                        'date' => isset($item->date)
+                            ? optional($item->date)->format('Y-m-d H:i')
+                            : (isset($item->created_at) ? optional($item->created_at)->format('Y-m-d H:i') : null),
+                    ];
+                })
+                ->values()
+                ->all();
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    private function loadRecentOrders(): array
+    {
+        if (!class_exists(\App\Models\Order::class)) {
+            return [];
+        }
+
+        try {
+            return \App\Models\Order::orderBy('_id', 'desc')
+                ->limit(5)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->_id ?? $item->id ?? null,
+                        'order_no' => $item->order_no ?? $item->order_id ?? null,
+                        'customer' => $item->customer_name ?? 'Customer',
+                        'amount' => (float) ($item->total ?? 0),
+                        'status' => strtolower((string) ($item->status ?? 'pending')),
+                        'date' => isset($item->purchase_date)
+                            ? optional($item->purchase_date)->format('Y-m-d H:i')
+                            : (isset($item->created_at) ? optional($item->created_at)->format('Y-m-d H:i') : null),
+                    ];
+                })
+                ->values()
+                ->all();
+        } catch (\Exception $e) {
+            return [];
         }
     }
 }

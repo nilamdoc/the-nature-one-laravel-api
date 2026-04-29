@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Page;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use App\Http\Resources\ApiResponse;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class PageController extends Controller
 {
@@ -31,7 +32,9 @@ class PageController extends Controller
 
             return ApiResponse::success($pages, 'Pages fetched successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Failed', [
                 'error' => $e->getMessage()
             ]);
@@ -66,7 +69,9 @@ class PageController extends Controller
 
             return ApiResponse::success($page, 'Page created successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Create failed', [
                 'error' => $e->getMessage()
             ]);
@@ -88,7 +93,9 @@ class PageController extends Controller
 
             return ApiResponse::success($page);
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Error', [
                 'error' => $e->getMessage()
             ]);
@@ -131,7 +138,9 @@ class PageController extends Controller
 
             return ApiResponse::success($page, 'Updated successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Update failed', [
                 'error' => $e->getMessage()
             ]);
@@ -155,7 +164,9 @@ class PageController extends Controller
 
             return ApiResponse::success([], 'Deleted successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Delete failed', [
                 'error' => $e->getMessage()
             ]);
@@ -182,10 +193,17 @@ class PageController extends Controller
                 'meta_description' => $page->meta_description,
             ]);
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Error', [
                 'error' => $e->getMessage()
             ]);
         }
     }
 }
+
+
+
+
+

@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Banner;
 use Illuminate\Http\Request;
 use App\Http\Resources\ApiResponse;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class BannerController extends Controller
 {
@@ -29,7 +30,9 @@ class BannerController extends Controller
 
             return ApiResponse::success($data, 'Banners fetched');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Failed', [
                 'error' => $e->getMessage()
             ]);
@@ -53,7 +56,9 @@ class BannerController extends Controller
 
             return ApiResponse::success($banner, 'Created successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Create failed', [
                 'error' => $e->getMessage()
             ]);
@@ -74,7 +79,9 @@ class BannerController extends Controller
 
             return ApiResponse::success($banner);
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Error', [
                 'error' => $e->getMessage()
             ]);
@@ -104,7 +111,9 @@ class BannerController extends Controller
 
             return ApiResponse::success($banner, 'Updated successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Update failed', [
                 'error' => $e->getMessage()
             ]);
@@ -127,10 +136,17 @@ class BannerController extends Controller
 
             return ApiResponse::success([], 'Deleted successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Delete failed', [
                 'error' => $e->getMessage()
             ]);
         }
     }
 }
+
+
+
+
+

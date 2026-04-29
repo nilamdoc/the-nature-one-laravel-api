@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use App\Http\Resources\ApiResponse;
 
 class ProductCategoryController extends Controller
@@ -64,6 +65,8 @@ class ProductCategoryController extends Controller
 
             return ApiResponse::success($category, 'Category created successfully');
 
+        } catch (ValidationException $e) {
+            return ApiResponse::validation($e->validator);
         } catch (\Exception $e) {
             return ApiResponse::error('Create failed', ['error' => $e->getMessage()]);
         }
@@ -122,6 +125,8 @@ class ProductCategoryController extends Controller
 
             return ApiResponse::success($category, 'Category updated successfully');
 
+        } catch (ValidationException $e) {
+            return ApiResponse::validation($e->validator);
         } catch (\Exception $e) {
             return ApiResponse::error('Update failed', ['error' => $e->getMessage()]);
         }
@@ -151,4 +156,26 @@ class ProductCategoryController extends Controller
             return ApiResponse::error('Delete failed', ['error' => $e->getMessage()]);
         }
     }
+
+    public function menu()
+    {
+        try {
+            $categories = ProductCategory::with(['products' => function ($q) {
+                $q->select('id', 'name', 'slug', 'image', 'price', 'original_price')
+                ->limit(4);
+            }])->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $categories
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
+
+

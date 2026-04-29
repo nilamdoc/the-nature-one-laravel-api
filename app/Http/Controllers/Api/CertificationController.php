@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Certification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\ApiResponse;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class CertificationController extends Controller
 {
@@ -30,7 +31,9 @@ class CertificationController extends Controller
 
             return ApiResponse::success($data, 'Certifications fetched');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Failed', [
                 'error' => $e->getMessage()
             ]);
@@ -58,7 +61,9 @@ class CertificationController extends Controller
 
             return ApiResponse::success($certification, 'Created successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Create failed', [
                 'error' => $e->getMessage()
             ]);
@@ -79,7 +84,9 @@ class CertificationController extends Controller
 
             return ApiResponse::success($certification);
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Error', [
                 'error' => $e->getMessage()
             ]);
@@ -117,7 +124,9 @@ class CertificationController extends Controller
 
             return ApiResponse::success($certification, 'Updated successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Update failed', [
                 'error' => $e->getMessage()
             ]);
@@ -144,10 +153,17 @@ class CertificationController extends Controller
 
             return ApiResponse::success([], 'Deleted successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Delete failed', [
                 'error' => $e->getMessage()
             ]);
         }
     }
 }
+
+
+
+
+

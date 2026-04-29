@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class AuditLogController extends Controller
 {
@@ -41,10 +43,13 @@ class AuditLogController extends Controller
 
             return ApiResponse::success($logs, 'Audit logs fetched successfully');
 
-        } catch (\Exception $e) {
+        } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Failed to fetch audit logs', [
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 }
+

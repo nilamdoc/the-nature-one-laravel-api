@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\TrustBadge;
 use Illuminate\Http\Request;
 use App\Http\Resources\ApiResponse;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class TrustBadgeController extends Controller
 {
@@ -29,7 +30,9 @@ class TrustBadgeController extends Controller
 
             return ApiResponse::success($data, 'Badges fetched');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Failed', [
                 'error' => $e->getMessage()
             ]);
@@ -53,7 +56,9 @@ class TrustBadgeController extends Controller
 
             return ApiResponse::success($badge, 'Created successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Create failed', [
                 'error' => $e->getMessage()
             ]);
@@ -75,7 +80,9 @@ class TrustBadgeController extends Controller
 
             return ApiResponse::success($badge);
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Error', [
                 'error' => $e->getMessage()
             ]);
@@ -105,7 +112,9 @@ class TrustBadgeController extends Controller
 
             return ApiResponse::success($badge, 'Updated successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Update failed', [
                 'error' => $e->getMessage()
             ]);
@@ -129,10 +138,17 @@ class TrustBadgeController extends Controller
 
             return ApiResponse::success([], 'Deleted successfully');
 
-        } catch (\Exception $e) {
+                } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (Throwable $e) {
             return ApiResponse::error('Delete failed', [
                 'error' => $e->getMessage()
             ]);
         }
     }
 }
+
+
+
+
+
