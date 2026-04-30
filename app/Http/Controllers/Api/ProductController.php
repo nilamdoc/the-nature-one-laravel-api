@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -19,8 +20,19 @@ class ProductController extends Controller
             $products = Product::orderBy('created_at', 'desc')->get();
             $categoryIds = $products->pluck('category')->filter()->unique()->values();
             $categoryMap = ProductCategory::whereIn('_id', $categoryIds)->get()->keyBy(fn ($item) => (string) $item->id);
+            $productIds = $products->pluck('id')->map(fn ($id) => (string) $id)->values();
+            $imageMap = ProductImage::whereIn('product_id', $productIds)
+                ->orderBy('is_primary', 'desc')
+                ->get()
+                ->groupBy(fn ($img) => (string) $img->product_id);
 
-            $data = $products->map(fn ($item) => $this->transformProduct($item, $categoryMap[(string) $item->category] ?? null))->values();
+            $data = $products->map(function ($item) use ($categoryMap, $imageMap) {
+                return $this->transformProduct(
+                    $item,
+                    $categoryMap[(string) $item->category] ?? null,
+                    $imageMap[(string) $item->id] ?? collect()
+                );
+            })->values();
 
             return ApiResponse::success($data, 'Products fetched');
         } catch (Throwable $e) {
@@ -94,8 +106,11 @@ class ProductController extends Controller
             }
 
             $category = ProductCategory::find($item->category);
+            $images = ProductImage::where('product_id', (string) $item->id)
+                ->orderBy('is_primary', 'desc')
+                ->get();
 
-            return ApiResponse::success($this->transformProduct($item, $category));
+            return ApiResponse::success($this->transformProduct($item, $category, $images));
         } catch (Throwable $e) {
             return ApiResponse::error('Error', ['error' => $e->getMessage()]);
         }
@@ -185,8 +200,17 @@ class ProductController extends Controller
         }
     }
 
-    private function transformProduct(Product $item, ?ProductCategory $category = null): array
+    private function transformProduct(Product $item, ?ProductCategory $category = null, $images = null): array
     {
+        $images = $images ?? collect();
+        $gallery = $images->map(fn ($img) => [
+            'id' => (string) ($img->id ?? $img->_id),
+            'image_url' => (string) ($img->image_url ?? ''),
+            'is_primary' => (bool) ($img->is_primary ?? false),
+        ])->values()->all();
+
+        $primaryImage = collect($gallery)->firstWhere('is_primary', true);
+
         return [
             'id' => (string) ($item->id ?? $item->_id),
             'name' => (string) $item->name,
@@ -201,7 +225,8 @@ class ProductController extends Controller
             'short_description' => (string) ($item->short_description ?? ''),
             'long_description' => (string) ($item->long_description ?? ''),
             'highlights' => $this->splitHighlights((string) ($item->highlights ?? '')),
-            'image' => (string) ($item->image ?? ''),
+            'image' => (string) (($primaryImage['image_url'] ?? '') ?: ($item->image ?? '')),
+            'gallery_images' => $gallery,
             'is_active' => (bool) ($item->is_active ?? false),
             'is_featured' => (bool) ($item->is_featured ?? false),
             'created_at' => optional($item->created_at)->toISOString(),
