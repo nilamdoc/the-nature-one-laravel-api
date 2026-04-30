@@ -29,6 +29,7 @@ class Product extends Model
 
     public function category()
     {
-        return $this->belongsTo(ProductCategory::class, 'category_id');
+        // Product documents store category id in `category` field.
+        return $this->belongsTo(ProductCategory::class, 'category', '_id');
     }
 }

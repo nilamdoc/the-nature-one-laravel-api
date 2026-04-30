@@ -22,6 +22,7 @@ class ProductCategory extends Model
 
     public function products()
     {
-        return $this->hasMany(Product::class, 'category_id');
+        // Product documents store category id in `category` field.
+        return $this->hasMany(Product::class, 'category', '_id');
     }
 }

@@ -13,14 +13,38 @@ use Throwable;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $products = Product::orderBy('created_at', 'desc')->get();
-            $categoryIds = $products->pluck('category')->filter()->unique()->values();
-            $categoryMap = ProductCategory::whereIn('_id', $categoryIds)->get()->keyBy(fn ($item) => (string) $item->id);
+            $query = Product::orderBy('created_at', 'desc');
 
-            $data = $products->map(fn ($item) => $this->transformProduct($item, $categoryMap[(string) $item->category] ?? null))->values();
+            $categorySlug = trim((string) $request->query('category_slug', ''));
+            if ($categorySlug !== '') {
+                $category = ProductCategory::where('slug', $categorySlug)->first();
+                if (!$category) {
+                    return ApiResponse::success([], 'Products fetched');
+                }
+
+                $query->where('category', (string) $category->id);
+            }
+
+            $products = $query->get();
+            $categories = ProductCategory::get();
+
+            $categoryMap = [];
+            foreach ($categories as $category) {
+                $byId = (string) $category->id;
+                $categoryMap[$byId] = $category;
+
+                $rawId = (string) ($category->_id ?? '');
+                if ($rawId !== '') {
+                    $categoryMap[$rawId] = $category;
+                }
+            }
+
+            $data = $products
+                ->map(fn ($item) => $this->transformProduct($item, $categoryMap[(string) $item->category] ?? null))
+                ->values();
 
             return ApiResponse::success($data, 'Products fetched');
         } catch (Throwable $e) {
