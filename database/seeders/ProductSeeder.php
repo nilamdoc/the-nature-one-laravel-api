@@ -11,90 +11,50 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        Product::query()->delete();
+        Product::query()->get()->each->delete();
 
-        $mobiles = ProductCategory::where('slug', 'mobiles')->first();
-        $laptops = ProductCategory::where('slug', 'laptops')->first();
-        $shoes = ProductCategory::where('slug', 'shoes')->first();
-        $furniture = ProductCategory::where('slug', 'furniture')->first();
-
-        $rows = [
-            [
-                'name' => 'Nova X1 Mobile',
-                'sku' => 'MOB-NOVA-X1',
-                'category' => $mobiles ? (string) $mobiles->id : '',
-                'badge' => 'Best Seller',
-                'price' => 19999,
-                'mrp' => 22999,
-                'discount' => 13,
-                'stock' => 40,
-                'short_description' => 'Fast 5G smartphone.',
-                'long_description' => 'Nova X1 with AMOLED display and 5G support.',
-                'highlights' => '5G,AMOLED,5000mAh',
-                'is_active' => true,
-                'is_featured' => true,
-                'slug' => 'nova-x1-mobile',
-                'image' => '/upload/products/product-1.jpg',
-            ],
-            [
-                'name' => 'WorkPro Laptop 14',
-                'sku' => 'LAP-WORKPRO-14',
-                'category' => $laptops ? (string) $laptops->id : '',
-                'badge' => 'New',
-                'price' => 54999,
-                'mrp' => 59999,
-                'discount' => 8,
-                'stock' => 22,
-                'short_description' => 'Slim work laptop.',
-                'long_description' => '14-inch productivity laptop with SSD storage.',
-                'highlights' => 'SSD,Lightweight,Backlit Keyboard',
-                'is_active' => true,
-                'is_featured' => false,
-                'slug' => 'workpro-laptop-14',
-                'image' => '/upload/products/product-2.jpg',
-            ],
-            [
-                'name' => 'StreetRun Shoes',
-                'sku' => 'SHO-STREETRUN',
-                'category' => $shoes ? (string) $shoes->id : '',
-                'badge' => '',
-                'price' => 2999,
-                'mrp' => 3999,
-                'discount' => 25,
-                'stock' => 70,
-                'short_description' => 'Daily running shoes.',
-                'long_description' => 'Comfort-focused running shoes for daily wear.',
-                'highlights' => 'Breathable,Lightweight,Grip Sole',
-                'is_active' => true,
-                'is_featured' => false,
-                'slug' => 'streetrun-shoes',
-                'image' => '/upload/products/product-1.jpg',
-            ],
-            [
-                'name' => 'OakNest Chair',
-                'sku' => 'FUR-OAKNEST-CHAIR',
-                'category' => $furniture ? (string) $furniture->id : '',
-                'badge' => 'Popular',
-                'price' => 8999,
-                'mrp' => 9999,
-                'discount' => 10,
-                'stock' => 15,
-                'short_description' => 'Ergonomic wooden chair.',
-                'long_description' => 'Solid wood chair with ergonomic support.',
-                'highlights' => 'Solid Wood,Ergonomic,Durable',
-                'is_active' => true,
-                'is_featured' => true,
-                'slug' => 'oaknest-chair',
-                'image' => '/upload/products/product-2.jpg',
-            ],
+        $productJson = [
+            ['name' => '10" Round Dinner Plates', 'category' => 'Plates', 'price' => 499, 'mrp' => 799, 'badge' => 'Best Seller', 'image' => '/upload/products/product-1.jpg'],
+            ['name' => '8" Salad Plates', 'category' => 'Plates', 'price' => 399, 'mrp' => 649, 'badge' => '', 'image' => '/upload/products/product-2.jpg'],
+            ['name' => '4" Dessert Plates', 'category' => 'Plates', 'price' => 299, 'mrp' => 499, 'badge' => '', 'image' => '/upload/products/product-3.jpg'],
+            ['name' => 'Square Plates - 25 Pack', 'category' => 'Plates', 'price' => 599, 'mrp' => 899, 'badge' => '', 'image' => '/upload/products/product-4.jpg'],
+            ['name' => 'Deep Round Bowls', 'category' => 'Bowls', 'price' => 449, 'mrp' => 749, 'badge' => '', 'image' => '/upload/products/product-3.jpg'],
+            ['name' => 'Dessert Bowls', 'category' => 'Bowls', 'price' => 299, 'mrp' => 499, 'badge' => '', 'image' => '/upload/products/product-3.jpg'],
+            ['name' => 'Bulk 200 Pack', 'category' => 'Bulk Packs', 'price' => 3999, 'mrp' => 4999, 'badge' => 'Popular', 'image' => '/upload/products/product-4.jpg'],
+            ['name' => 'Mega 500 Pack', 'category' => 'Bulk Packs', 'price' => 8999, 'mrp' => 10999, 'badge' => 'Best Value', 'image' => '/upload/products/product-4.jpg'],
+            ['name' => 'Party Combo Set', 'category' => 'Combo Sets', 'price' => 899, 'mrp' => 1299, 'badge' => 'New', 'image' => '/upload/products/product-5.jpg'],
         ];
 
-        foreach ($rows as $row) {
-            if ($row['category'] === '') {
+        foreach ($productJson as $index => $row) {
+            $category = ProductCategory::where('name', $row['category'])
+                ->whereNull('parent_category')
+                ->first();
+
+            if (!$category) {
                 continue;
             }
-            Product::create($row);
+
+            $name = $row['name'];
+            $slug = Str::slug($name);
+            $discount = max(0, (int) round((($row['mrp'] - $row['price']) / $row['mrp']) * 100));
+
+            Product::create([
+                'name' => $name,
+                'slug' => $slug,
+                'sku' => strtoupper(substr(Str::slug($row['category']), 0, 3)) . '-' . str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT),
+                'category' => (string) $category->id,
+                'badge' => $row['badge'],
+                'price' => $row['price'],
+                'mrp' => $row['mrp'],
+                'discount' => $discount,
+                'stock' => random_int(15, 200),
+                'short_description' => $name,
+                'long_description' => $name . ' from The Nature One catalog.',
+                'highlights' => 'Food Safe,Leak Resistant,Eco Friendly',
+                'image' => $row['image'],
+                'is_active' => true,
+                'is_featured' => in_array($row['badge'], ['Best Seller', 'Popular', 'Best Value'], true),
+            ]);
         }
     }
 }
-

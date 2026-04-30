@@ -57,6 +57,8 @@ Route::get('/hero-slides', [HeroSlideController::class, 'index']);
 
 Route::get('/blogs', [BlogController::class, 'index']);
 Route::get('/blogs/{identifier}', [BlogController::class, 'show']);
+Route::get('/trust-badges', [TrustBadgeController::class, 'index']);
+Route::get('/pages/slug/{slug}', [PageController::class, 'getBySlug']);
 
 Route::post('/orders', [OrderController::class, 'store']);
 Route::get('/orders/{id}', [OrderController::class, 'show']);
@@ -122,7 +124,6 @@ Route::group([], function () {
             Route::delete('/{id}', [TestimonialController::class, 'destroy']);
         });
         Route::prefix('blogs')->group(function () {
-            Route::get('/', [BlogController::class, 'index']);
             Route::post('/', [BlogController::class, 'store']);
             Route::get('/{id}', [BlogController::class, 'show']);
             Route::post('/{id}', [BlogController::class, 'update']); // form-data support
@@ -135,7 +136,6 @@ Route::group([], function () {
             Route::post('/{id}', [PageController::class, 'update']); // form-data safe
             Route::delete('/{id}', [PageController::class, 'destroy']);
             // 🔥 Slug based (frontend)
-            Route::get('/slug/{slug}', [PageController::class, 'getBySlug']);
         });
         Route::prefix('hero-slides')->group(function () {
             Route::post('/', [HeroSlideController::class, 'store']);
@@ -145,7 +145,6 @@ Route::group([], function () {
         });
        
         Route::prefix('trust-badges')->group(function () {
-            Route::get('/', [TrustBadgeController::class, 'index']);
             Route::post('/', [TrustBadgeController::class, 'store']);
             Route::get('/{id}', [TrustBadgeController::class, 'show']);
             Route::post('/{id}', [TrustBadgeController::class, 'update']);
@@ -194,7 +193,6 @@ Route::group([], function () {
             Route::delete('/{id}', [ProductCategoryController::class, 'destroy']);
         });
         Route::prefix('products')->group(function () {
-            Route::get('/', [ProductController::class, 'index']);
             Route::post('/', [ProductController::class, 'store']);
             Route::get('/{id}', [ProductController::class, 'show']);
             Route::post('/{id}', [ProductController::class, 'update']); // POST for update
@@ -226,4 +224,5 @@ Route::group([], function () {
         Route::get('/verify-token', [AuthController::class,'verifyToken']);
     });
 });
+
 
